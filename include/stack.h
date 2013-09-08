@@ -2,6 +2,7 @@
 
 struct stk {
 	void *data;
+	const int size;
 	int top;	
 };
 
