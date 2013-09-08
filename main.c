@@ -1,6 +1,7 @@
 #include "include/header.h"
 
 extern int problem_gen(char *);
+extern void problem_lil(void);
 
 enum probset {GEN, STR, SRT, LIL, TRE};
 
@@ -26,7 +27,6 @@ label:
 	for (i = 0; i < (sizeof(prb)/sizeof(*prb)); i++) 
 		if(!strcmp(prb[i], argv[1]))
 			break;
-
 		
 	switch(i) 
 	{
@@ -41,6 +41,7 @@ label:
 			  break;
 	
 		case LIL: printf("linked list problem\n");
+			  problem_lil();	
 			  break;
 	
 		case TRE: printf("tree problem\n");
