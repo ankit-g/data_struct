@@ -10,19 +10,20 @@
 
 static int err_val = 0xcafebabe;
 
-struct stk *init_stk(int size, int sobj)
+// Provide no of elements and size of each element.
+struct stk *init_stk(int nele, int szobj)
 {
-	int i = size;
+	int i = nele;
 	struct stk *nstk = ak_alloc(sizeof(*nstk));
 	
-	nstk->data = ak_alloc(size*sizeof(void *));
+	nstk->data = ak_alloc(nele*sizeof(void *));
 
-	nstk->size = size;
+	nstk->size = nele;
 
-	nstk->sobj = sobj;
+	nstk->sobj = szobj;
 	
 	while (i--)
-		nstk->data[i] = ak_alloc(sobj);
+		nstk->data[i] = ak_alloc(szobj);
 	
 	nstk->top = -1;	
 		
