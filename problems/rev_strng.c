@@ -1,4 +1,5 @@
 #include "../include/stack.h"
+#include "../include/queue.h"
 #include "../include/header.h"
 
 struct abc
@@ -31,9 +32,28 @@ void stk_use(void)
         clear_stk(new_stk);	
 }
 
+void queue_use(void)
+{
+	int i = 5;
+	struct queue *que;
+
+	que = init_queue(i, sizeof(*que));
+
+	while(i--)
+		enqueue(que, &obj[i]);
+	i = 5;
+
+	while(i--) {
+		struct abc *ob = dequeue(que);
+		printf("dequeue %d %d\n", ob->a, ob->b);
+	}
+
+	clear_queue(que);
+}
+
 // supply problem instance 
 int problem_gen(char *str)
 {
-	stk_use();
+	queue_use();
 	return EXIT_SUCCESS;		
 }
