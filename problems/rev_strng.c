@@ -13,22 +13,27 @@ struct abc
 		{9, 10},
 };
 
-// supply problem instance 
-int problem(char *str)
+// Using generic stack.
+void stk_use(void)
 {
 	int i = 5;
-	struct stk *new_stk;
-	new_stk = init_stk(5, sizeof(struct abc));
+        struct stk *new_stk;
+        new_stk = init_stk(5, sizeof(struct abc));
 
+        while(i--)
+                stk_push(new_stk, &obj[i]);
+        i = 5;
+        while(i--) {
+                struct abc *obj = stk_pop(new_stk);
+                printf("%d %d\n", obj->a, obj->b);
+        }
 
-	while(i--)
-		stk_push(new_stk, &obj[i]);
-	i = 5;
-	while(i--) {
-		struct abc *obj = stk_pop(new_stk);
-		printf("%d %d\n", obj->a, obj->b);
-	}
-	clear_stk(new_stk);
+        clear_stk(new_stk);	
+}
 
+// supply problem instance 
+int problem_gen(char *str)
+{
+	stk_use();
 	return EXIT_SUCCESS;		
 }

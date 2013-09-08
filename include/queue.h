@@ -1,9 +1,10 @@
 struct queue
 {
-	void *data;
-	const int size;
-	int fnt;
-	int rer;
+	void **data;
+	int size;
+	int szobj;
+	int f;
+	int r;
 };
 
 // Initialize queue with given size.
