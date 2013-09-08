@@ -4,7 +4,7 @@ extern int problem(char *);
 
 int main(int argc, char *argv[])
 {	
-	printf("Kopal %s\n", __func__);
+	printf("From Main\n");
 	problem(NULL);
 	return EXIT_SUCCESS;
 }
