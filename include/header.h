@@ -8,3 +8,5 @@
 #else
 #define debug(fmt, arg...)
 #endif
+
+extern void *ak_alloc(size_t);

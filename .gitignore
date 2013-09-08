@@ -29,7 +29,7 @@
 *.lzma
 *.patch
 *.gcno
-
+elf
 #
 # Top-level generic files
 #
