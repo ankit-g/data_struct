@@ -19,3 +19,5 @@ extern void *ret_ele(struct node *, int );
  * and the max val of element. Creates n integer nodes. 
  */
 extern void crt_nodes(struct node **, int, int);
+
+extern void *middle_ele(struct node *);

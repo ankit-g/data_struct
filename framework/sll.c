@@ -44,3 +44,16 @@ void crt_nodes(struct node **head, int n, int max)
 		add_node(head, &g, sizeof(int));
 	}
 }
+
+void *middle_ele(struct node *head)
+{
+	struct node *fst, *slw;
+	fst = slw = head;
+	
+	while(fst && fst->next) {
+		fst = fst->next->next;
+		slw = slw->next;
+	}	
+
+	return slw->data;
+}

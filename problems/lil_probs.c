@@ -38,14 +38,16 @@ void lil_op(void)
 	struct node *head = NULL, *tmp;
 	int i = 0;
 
-	crt_nodes(&head, 10, 20);
+	crt_nodes(&head, 9, 20);
 
 	tmp = head;
 	
 	while(tmp) {
 		printf("%d %d\n", i++, *(int *)tmp->data);
 		tmp = tmp->next;	
-	} 
+	}
+
+	printf("middle %d\n", *(int *)middle_ele(head));
 
 	free_list(head);		
 }
