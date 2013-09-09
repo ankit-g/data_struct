@@ -1,13 +1,14 @@
 #include "include/header.h"
 
 extern int problem_gen(char *);
-extern void problem_lil(void);
+extern void problem_lil(int);
 
 enum probset {GEN, STR, SRT, LIL, TRE};
 
 int main(int argc, char *argv[])
 {	
 	int i;
+	int arg;
 
 	char *str = "gen / str / srt / lil / tre";
 
@@ -23,6 +24,9 @@ label:
 		printf("tre = tree\n");
 		exit(0);	
 	}
+	
+	if (argc == 3) 
+		arg = atoi(argv[2]);
 
 	for (i = 0; i < (sizeof(prb)/sizeof(*prb)); i++) 
 		if(!strcmp(prb[i], argv[1]))
@@ -41,7 +45,7 @@ label:
 			  break;
 	
 		case LIL: printf("linked list problem\n");
-			  problem_lil();	
+			  problem_lil(arg);	
 			  break;
 	
 		case TRE: printf("tree problem\n");

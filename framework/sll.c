@@ -33,3 +33,14 @@ void *ret_ele(struct node *head, int location)
 
 	return head->data;
 }
+
+// Create n nodes with randum integers 
+void crt_nodes(struct node **head, int n, int max)
+{
+	int g;
+
+	while(n--) {
+		g = rand()%max;
+		add_node(head, &g, sizeof(int));
+	}
+}
