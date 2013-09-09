@@ -33,8 +33,35 @@ void lil_test(void)
 	free_list(head);	
 }
 
-
-void problem_lil(void)
+void lil_op(void)
 {
-	lil_test();	
+	struct node *head = NULL, *tmp;
+	int i = 0;
+
+	crt_nodes(&head, 10, 20);
+
+	tmp = head;
+	
+	while(tmp) {
+		printf("%d %d\n", i++, *(int *)tmp->data);
+		tmp = tmp->next;	
+	} 
+
+	free_list(head);		
+}
+
+
+void problem_lil(int s)
+{
+	switch(s)
+	{
+		case 0 : lil_test();	
+			 break;
+
+		case 1 : lil_op();
+			 break;		
+
+		default: printf("Please specify a valid prblem to run\n");			 
+	}
+		
 }
