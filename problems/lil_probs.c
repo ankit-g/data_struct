@@ -35,19 +35,17 @@ void lil_test(void)
 
 void lil_op(void)
 {
-	struct node *head = NULL, *tmp;
-	int i = 0;
+	struct node *head = NULL;
 
 	crt_nodes(&head, 9, 20);
 
-	tmp = head;
-	
-	while(tmp) {
-		printf("%d %d\n", i++, *(int *)tmp->data);
-		tmp = tmp->next;	
-	}
+	prnt_list(head);
 
 	printf("middle %d\n", *(int *)middle_ele(head));
+
+	rev_list(&head);
+
+	prnt_list(head);
 
 	free_list(head);		
 }

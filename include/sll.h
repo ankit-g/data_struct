@@ -21,3 +21,7 @@ extern void *ret_ele(struct node *, int );
 extern void crt_nodes(struct node **, int, int);
 
 extern void *middle_ele(struct node *);
+
+extern void rev_list(struct node **);
+
+extern void prnt_list(struct node *);
