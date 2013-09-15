@@ -25,22 +25,22 @@ ssize_t usbg_read(struct file *file, char __user *buf, size_t size, loff_t *ppos
 }
 
 /* Table of devices that work with this driver */
-static struct usb_device_id my_table[] =
+static struct usb_device_id usb_acc_table[] =
 {
 // 0525:a4a0
     { USB_DEVICE(0x0525, 0xA4A0) },
     {} /* Terminating entry */
 };
-MODULE_DEVICE_TABLE (usb, my_table);
+MODULE_DEVICE_TABLE (usb, usb_acc_table);
 
 
-static void my_disconnect(struct usb_interface *interface)
+static void usb_acc_disconnect(struct usb_interface *interface)
 {
 	debugf();
 }
 
 
-int my_probe (struct usb_interface *intf,
+int usb_acc_probe (struct usb_interface *intf,
                       const struct usb_device_id *id)
 {
         debugf();
@@ -52,9 +52,9 @@ int my_probe (struct usb_interface *intf,
 static struct usb_driver usb_acc_driver =
 {
         .name           = "usb_acc_driver",
-        .probe          = my_probe,
-        .disconnect     = my_disconnect,
-        .id_table       = my_table,
+        .probe          = usb_acc_probe,
+        .disconnect     = usb_acc_disconnect,
+        .id_table       = usb_acc_table,
 };
 
 
