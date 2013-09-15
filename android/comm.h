@@ -7,6 +7,7 @@
 #include <linux/cdev.h>
 
 #ifdef DEBUG
+#define debugf() printk(KERN_DEBUG"%s(): ", __func__)
 #define debug(fmt, args...) do { /*printk(KERN_DEBUG"%s(): ", __func__);*/printk(KERN_DEBUG fmt, ##args); } while (0)
 #else
 #define debug(fmt, args...) do { } while(0)
