@@ -33,6 +33,8 @@ void lil_test(void)
 	free_list(head);	
 }
 
+// Find Middle Element and Reverse List.
+
 void lil_op(void)
 {
 	struct node *head = NULL;
@@ -50,6 +52,17 @@ void lil_op(void)
 	free_list(head);		
 }
 
+void lil_merge()
+{
+	struct node *hd1 = NULL;
+	struct node *hd2 = NULL;
+
+	crt_nodes(&hd1, 5, 20);
+	crt_nodes(&hd2, 5, 20);
+
+	prnt_list(hd1);
+	prnt_list(hd2);
+}
 
 void problem_lil(int s)
 {
@@ -59,6 +72,9 @@ void problem_lil(int s)
 			 break;
 
 		case 1 : lil_op();
+			 break;
+
+		case 2 : lil_merge();
 			 break;		
 
 		default: printf("Please specify a valid prblem to run\n");			 

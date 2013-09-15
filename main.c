@@ -8,7 +8,7 @@ enum probset {GEN, STR, SRT, LIL, TRE};
 int main(int argc, char *argv[])
 {	
 	int i;
-	int arg;
+	int arg = 0; // Default value problem
 
 	char *str = "gen / str / srt / lil / tre";
 
