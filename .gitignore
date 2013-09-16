@@ -30,6 +30,7 @@
 *.patch
 *.gcno
 elf
+util
 #
 # Top-level generic files
 #

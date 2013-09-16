@@ -3,7 +3,9 @@
  */
 
 #include "comm.h"
+#include "acc_ioctl.h"
 #include <linux/usb.h>
+#include <linux/uaccess.h>
 #define NAME "usb_accessory_debug"
 
 static struct cdev cdev;
@@ -12,10 +14,12 @@ static struct device *pdev;
 static struct usb_device *acc_device;
 
 static ssize_t usbg_read (struct file *, char __user *, size_t, loff_t *);
+static long usbg_ioctl(struct file *, unsigned int, unsigned long);
 
 static struct file_operations fops = {
         .owner          = THIS_MODULE,
         .read           = usbg_read,
+	.unlocked_ioctl = usbg_ioctl
 };
 
 ssize_t usbg_read(struct file *file, char __user *buf, size_t size, loff_t *ppos)
@@ -23,6 +27,33 @@ ssize_t usbg_read(struct file *file, char __user *buf, size_t size, loff_t *ppos
         debugf();
         return size;
 }
+
+static long usbg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+        int ret = 0;
+	int usb_cmd;
+
+        switch (cmd) {
+        case USBCMD: debug("command recieved\n");	
+		     if (copy_from_user(&usb_cmd, (int __user *)arg, sizeof(int))) {
+			debug("Unable to copy from user\n");
+			ret =  -EFAULT;
+		     	goto err_fault;
+		     }	
+	
+		     ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
+                       	   0x21, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
+                           usb_cmd, 0, NULL, 0, 100);		
+        	       	   break;
+
+	default: debug("Command not found");	
+        }
+
+err_fault:
+        return ret;
+}
+
+
 
 /* Table of devices that work with this driver */
 static struct usb_device_id usb_acc_table[] =
@@ -43,9 +74,16 @@ static void usb_acc_disconnect(struct usb_interface *interface)
 int usb_acc_probe (struct usb_interface *intf,
                       const struct usb_device_id *id)
 {
+	int ret = 0;
         debugf();
         acc_device = interface_to_usbdev(intf);
-        return 0;
+
+	ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
+                        0x21,
+                        USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
+                        5, 0, NULL, 0, 100);
+
+        return ret;
 }
 
 
@@ -54,7 +92,7 @@ static struct usb_driver usb_acc_driver =
         .name           = "usb_acc_driver",
         .probe          = usb_acc_probe,
         .disconnect     = usb_acc_disconnect,
-        .id_table       = usb_acc_table,
+        .id_table       = usb_acc_table
 };
 
 

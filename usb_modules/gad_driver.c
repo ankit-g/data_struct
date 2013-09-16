@@ -309,13 +309,16 @@ static int gad_enable_eps(void)
 
         req->complete = ep0_complete;
 
-
-
-
-
 fail:
 	return err;
 }
+
+static int hndl_vndr_req(const struct usb_ctrlrequest * ctrlreq)
+{
+	int	dir = (ctrlreq->bRequestType & 0x80) ? 1 : 0;
+
+}
+
 
 static int usbg_setup(struct usb_gadget * gadget, const struct usb_ctrlrequest * ctrlreq)
 {
@@ -374,7 +377,11 @@ static int usbg_setup(struct usb_gadget * gadget, const struct usb_ctrlrequest *
 
 	}
 	else {
-		printk(KERN_DEBUG"OUT REQ SENT\n");	
+		printk(KERN_DEBUG"OUT REQ SENT\n");
+		if(ctrlreq->bRequestType & USB_TYPE_VENDOR) {
+			printk(KERN_DEBUG"Vendor request sent\n");
+		}
+	
 		switch (ctrlreq->bRequest) {
 		case USB_REQ_SET_CONFIGURATION:
 			printk(KERN_DEBUG"set config %d\n", w_value);		
@@ -395,6 +402,17 @@ static int usbg_setup(struct usb_gadget * gadget, const struct usb_ctrlrequest *
 		case USB_REQ_SET_INTERFACE:
 			printk(KERN_DEBUG"set interface %d\n", w_value);			
 			break;
+
+		default: printk("New request sent\n");
+			  // Wait for ZLP from host for completion 
+                          // of setting of configuration.
+                          req->length = EP0_DELAYED;
+                          value = usb_ep_queue(_usbg_dev->ep0, req, GFP_ATOMIC);
+                          if (value < 0) {
+                                   req->status = 0;
+                                   ep0_complete(_usbg_dev->ep0, req);
+                          }
+                          break;		 	
 		}
 	}
 	return rc;
