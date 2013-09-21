@@ -145,9 +145,6 @@ static int populate_config_buf(struct usb_gadget *gadget,
         return len;
 }
 
-
-
-
 struct usbg_dev {
         struct usb_gadget       *gadget;        /* Copy of cdev->gadget */
       
@@ -156,7 +153,7 @@ struct usbg_dev {
  
         struct usb_ep           *bulk_in;
         struct usb_request      *inreq;        /* Copy of cdev->req */
-
+	struct work_struct 	cmd_work;
         struct usb_ep           *bulk_out;
         struct usb_request      *outreq;        /* Copy of cdev->req */
 };     
@@ -166,7 +163,7 @@ static struct class *usbg_class;
 static struct cdev cdev;
 static dev_t dev;
 static struct device *pdev;
-
+static int out_pkt_rcv;
 static int usbg_setup(struct usb_gadget * , const struct usb_ctrlrequest * );
 static void usbg_unbind(struct usb_gadget * );
 static void usbg_disconnect(struct usb_gadget * );
@@ -231,8 +228,16 @@ static struct usb_gadget_driver usbg_driver = {
 
 static void ep0_complete(struct usb_ep *ep, struct usb_request *req)
 { 
-	 printk(KERN_DEBUG"%s --> %d, %u/%u\n", __func__,
+	int new_val;
+	printk(KERN_DEBUG"%s --> %d, %u/%u\n", __func__,
                                 req->status, req->actual, req->length);
+
+	if (out_pkt_rcv) {
+		out_pkt_rcv = 0;
+		memcpy(&new_val, req->buf, sizeof(int));		
+		printk(KERN_DEBUG"new_val = %d\n", new_val);
+		schedule_work(&_usbg_dev->cmd_work);	
+	}	
 }
 
 static void usbg_disconnect(struct usb_gadget *gadget)
@@ -313,10 +318,42 @@ fail:
 	return err;
 }
 
+static void cmd_rcv_work(struct work_struct *work)
+{
+	printk(KERN_DEBUG"cmd %s\n", __func__);
+}
+
 static int hndl_vndr_req(const struct usb_ctrlrequest * ctrlreq)
 {
-	int	dir = (ctrlreq->bRequestType & 0x80) ? 1 : 0;
+	int dir = (ctrlreq->bRequestType & 0x80) ? 1 : 0;
+	int ret = 0;
+	struct usb_request *req = _usbg_dev->ep0req;
 
+	if (dir) {
+		printk(KERN_DEBUG"IN REQ SENT\n");
+		// Wait for ZLP from host for completion 
+                // of setting of configuration.
+                req->length = EP0_BUFSIZE;
+                ret = usb_ep_queue(_usbg_dev->ep0, req, GFP_ATOMIC);
+                if (ret < 0) {
+			req->status = 0;
+                        ep0_complete(_usbg_dev->ep0, req);
+                }
+	}
+	else {
+		printk(KERN_DEBUG"OUT REQ SENT\n");
+                // Wait for ZLP from host for completion 
+                // of setting of configuration.
+		out_pkt_rcv = 1;
+                req->length = sizeof(int);
+                ret = usb_ep_queue(_usbg_dev->ep0, req, GFP_ATOMIC);
+                if (ret < 0) {
+                        req->status = 0;
+                        ep0_complete(_usbg_dev->ep0, req);
+                }      
+	}
+
+	return ret;
 }
 
 
@@ -335,6 +372,12 @@ static int usbg_setup(struct usb_gadget * gadget, const struct usb_ctrlrequest *
 	printk(KERN_DEBUG"bRequestType %x bRequest %x wValue %x wIndex %d wLength %d\n"
 		, ctrlreq->bRequestType, ctrlreq->bRequest, w_value, w_index, w_length);
 
+	if(ctrlreq->bRequestType & USB_TYPE_VENDOR) {
+		printk(KERN_DEBUG"Vendor request sent\n");
+		rc = hndl_vndr_req(ctrlreq);	
+		return rc;
+	}
+
 	if(dir) {
 		printk(KERN_DEBUG"req dir = IN\n");
 
@@ -349,7 +392,7 @@ static int usbg_setup(struct usb_gadget * gadget, const struct usb_ctrlrequest *
 				value = min(w_length, (u16)sizeof(struct usb_device_descriptor));
 				req->length = value;
 				memcpy(req->buf, &device_desc, value);
-				value = usb_ep_queue(_usbg_dev->ep0, req, GFP_ATOMIC);
+			value = usb_ep_queue(_usbg_dev->ep0, req, GFP_ATOMIC);
 				if (value < 0) {
 					req->status = 0;
 					ep0_complete(_usbg_dev->ep0, req);			
@@ -378,9 +421,6 @@ static int usbg_setup(struct usb_gadget * gadget, const struct usb_ctrlrequest *
 	}
 	else {
 		printk(KERN_DEBUG"OUT REQ SENT\n");
-		if(ctrlreq->bRequestType & USB_TYPE_VENDOR) {
-			printk(KERN_DEBUG"Vendor request sent\n");
-		}
 	
 		switch (ctrlreq->bRequest) {
 		case USB_REQ_SET_CONFIGURATION:
@@ -404,15 +444,15 @@ static int usbg_setup(struct usb_gadget * gadget, const struct usb_ctrlrequest *
 			break;
 
 		default: printk("New request sent\n");
-			  // Wait for ZLP from host for completion 
-                          // of setting of configuration.
-                          req->length = EP0_DELAYED;
-                          value = usb_ep_queue(_usbg_dev->ep0, req, GFP_ATOMIC);
-                          if (value < 0) {
-                                   req->status = 0;
-                                   ep0_complete(_usbg_dev->ep0, req);
-                          }
-                          break;		 	
+			 // Wait for ZLP from host for completion 
+                         // of setting of configuration.
+                         req->length = EP0_DELAYED;
+                         value = usb_ep_queue(_usbg_dev->ep0, req, GFP_ATOMIC);
+                         if (value < 0) {
+                                  req->status = 0;
+                                  ep0_complete(_usbg_dev->ep0, req);
+                         }
+                         break;		 	
 		}
 	}
 	return rc;
@@ -433,6 +473,8 @@ static int __init usbg_bind(struct usb_gadget *gadget)
                 printk(KERN_ERR"kmalloc failed\n");
                 goto err_release;
         }
+
+	INIT_WORK(&_usbg_dev->cmd_work, cmd_rcv_work);
 
         /*
          * usb_ep_autoconfig_reset - reset endpoint autoconfig state1
@@ -506,6 +548,7 @@ static int __init gad_init(void)
 	int ret;
 
 	printk(KERN_DEBUG"%s\n", __func__);
+	
 
 	ret=alloc_chrdev_region(&dev,0,1,"usbg_driver");
 	if (ret!=0) {
