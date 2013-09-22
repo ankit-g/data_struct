@@ -31,27 +31,51 @@ ssize_t usbg_read(struct file *file, char __user *buf, size_t size, loff_t *ppos
 static long usbg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
         int ret = 0;
-	int usb_cmd;
+	int usb_cmd = 0;
 	int data = 100;
+	
+	char str[] = "Ankyt-G";
 
         switch (cmd) {
 
-        case USBCMDS: debug("command recieved\n");	
-		      if (copy_from_user(&usb_cmd, (int __user *)arg, sizeof(int))) {
+        case USBCMDS: if (copy_from_user(&usb_cmd, (int __user *)arg, sizeof(int))) {
 			 	printk(KERN_ERR"Unable to copy from user\n");
 			 	ret =  -EFAULT;
 		     	 	goto err_fault;
 		      }	
+
+		      ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
+                       	    52, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
+                            0, 0, str, sizeof(str), 100);		
+
+		      ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
+                       	    52, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
+                            0, 1, str, sizeof(str), 100);		
+
+		      ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
+                       	    52, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
+                            0, 2, str, sizeof(str), 100);		
+
+		      ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
+                       	    52, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
+                            0, 3, str, sizeof(str), 100);		
+		     
+		      ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
+                       	    52, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
+                            0, 4, str, sizeof(str), 100);		
+
+		      ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
+                       	    52, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
+                            0, 5, str, sizeof(str), 100);		
 	
 		      ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
-                       	    0x23, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
-                            usb_cmd, 0, (void *)&data, sizeof(int), 100);		
+                       	    53, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
+                            usb_cmd, 0, NULL, 0, 100);		
 
         	      break;
         
-	case USBCMDR: debug("command recieved\n");	
-		      ret = usb_control_msg(acc_device, usb_rcvctrlpipe(acc_device, 0),
-                       	    0x23, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_IN,
+	case USBCMDR: ret = usb_control_msg(acc_device, usb_rcvctrlpipe(acc_device, 0),
+                       	    51, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_IN,
                             usb_cmd, 0, (void *)&data, sizeof(int), 100);		
 
 		      if (copy_to_user((int __user *)arg, &data, sizeof(int))) {
@@ -59,13 +83,16 @@ static long usbg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			 	ret =  -EFAULT;
 		     	 	goto err_fault;
 		      }
-		    
+		      break;	 
+
+	case USBAENB: ret = usb_control_msg(acc_device, usb_rcvctrlpipe(acc_device, 0),
+                            USB_REQ_SET_CONFIGURATION, USB_RECIP_DEVICE | USB_DIR_OUT,
+                            1, 0, NULL, 0, 100); 
         	      break;                       
 
 	default:      debug("Command not found");	
         }
 
-	debug("data = %d\n", data);
 err_fault:
         return ret;
 
@@ -75,6 +102,9 @@ err_fault:
 static struct usb_device_id usb_acc_table[] = {
  // 0525:a4a0
     { USB_DEVICE(0x0525, 0xA4A0) },
+    { USB_DEVICE(0x04e8, 0x6860) },
+    { USB_DEVICE(0x18d1, 0x2d01) },
+    { USB_DEVICE(0x04e8, 0x685c) },
     {} /* Terminating entry */
 };
 MODULE_DEVICE_TABLE (usb, usb_acc_table);
@@ -92,11 +122,6 @@ int usb_acc_probe (struct usb_interface *intf,
 	int ret = 0;
         debugf();
         acc_device = interface_to_usbdev(intf);
-
-	ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
-                        0x21,
-                        USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
-                        5, 0, NULL, 0, 100);
 
         return ret;
 }

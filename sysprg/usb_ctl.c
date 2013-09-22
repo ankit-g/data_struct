@@ -14,7 +14,8 @@
 
 enum usb_controller {
 	USB_CMD_SND,
-	USB_CMD_RCV
+	USB_CMD_RCV,
+	USB_CMD_ACC
 };
 
 int main(int argc, char **argv)
@@ -38,6 +39,11 @@ int main(int argc, char **argv)
 			ret = ioctl(fd, USBCMDR, &val);
 			err_chk(ret, ioctl);
 			printf("The value = %d\n", val);	
+			break;
+	
+		case USB_CMD_ACC:	
+			ret = ioctl(fd, USBAENB);
+			err_chk(ret, ioctl);
 			break;
 
 		default:
