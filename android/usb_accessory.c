@@ -120,9 +120,8 @@ int usb_acc_probe (struct usb_interface *intf,
                       const struct usb_device_id *id)
 {
 	int ret = 0;
-        debugf();
+	debug("idVendor : %x idProduct : %x\n", id->idVendor, id->idProduct);
         acc_device = interface_to_usbdev(intf);
-
         return ret;
 }
 
