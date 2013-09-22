@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "acc_ioctl.h"
+#include "../android/acc_ioctl.h"
 
 #define err_chk(val, func)  do{				\
 				if (val <0 ) {		\
@@ -13,7 +13,8 @@
 			    }while(0)			\
 
 enum usb_controller {
-	USB_CMD_SND
+	USB_CMD_SND,
+	USB_CMD_RCV
 };
 
 int main(int argc, char **argv)
@@ -29,8 +30,14 @@ int main(int argc, char **argv)
 
 	switch (state) {
 		case USB_CMD_SND:	
-			ret = ioctl(fd, USBCMD, &val);
+			ret = ioctl(fd, USBCMDS, &val);
 			err_chk(ret, ioctl);
+			break;
+
+		case USB_CMD_RCV:	
+			ret = ioctl(fd, USBCMDR, &val);
+			err_chk(ret, ioctl);
+			printf("The value = %d\n", val);	
 			break;
 
 		default:

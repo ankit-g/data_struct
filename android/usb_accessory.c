@@ -32,33 +32,48 @@ static long usbg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
         int ret = 0;
 	int usb_cmd;
+	int data = 100;
 
         switch (cmd) {
-        case USBCMD: debug("command recieved\n");	
-		     if (copy_from_user(&usb_cmd, (int __user *)arg, sizeof(int))) {
-			debug("Unable to copy from user\n");
-			ret =  -EFAULT;
-		     	goto err_fault;
-		     }	
-	
-		     ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
-                       	   0x21, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
-                           usb_cmd, 0, NULL, 0, 100);		
-        	       	   break;
 
-	default: debug("Command not found");	
+        case USBCMDS: debug("command recieved\n");	
+		      if (copy_from_user(&usb_cmd, (int __user *)arg, sizeof(int))) {
+			 	printk(KERN_ERR"Unable to copy from user\n");
+			 	ret =  -EFAULT;
+		     	 	goto err_fault;
+		      }	
+	
+		      ret = usb_control_msg(acc_device, usb_sndctrlpipe(acc_device, 0),
+                       	    0x23, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_OUT,
+                            usb_cmd, 0, (void *)&data, sizeof(int), 100);		
+
+        	      break;
+        
+	case USBCMDR: debug("command recieved\n");	
+		      ret = usb_control_msg(acc_device, usb_rcvctrlpipe(acc_device, 0),
+                       	    0x23, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_DIR_IN,
+                            usb_cmd, 0, (void *)&data, sizeof(int), 100);		
+
+		      if (copy_to_user((int __user *)arg, &data, sizeof(int))) {
+		      		printk(KERN_ERR"Unable to copy to user\n");
+			 	ret =  -EFAULT;
+		     	 	goto err_fault;
+		      }
+		    
+        	      break;                       
+
+	default:      debug("Command not found");	
         }
 
+	debug("data = %d\n", data);
 err_fault:
         return ret;
+
 }
 
-
-
 /* Table of devices that work with this driver */
-static struct usb_device_id usb_acc_table[] =
-{
-// 0525:a4a0
+static struct usb_device_id usb_acc_table[] = {
+ // 0525:a4a0
     { USB_DEVICE(0x0525, 0xA4A0) },
     {} /* Terminating entry */
 };

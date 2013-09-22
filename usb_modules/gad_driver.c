@@ -327,13 +327,14 @@ static int hndl_vndr_req(const struct usb_ctrlrequest * ctrlreq)
 {
 	int dir = (ctrlreq->bRequestType & 0x80) ? 1 : 0;
 	int ret = 0;
+	int cmd_send;
 	struct usb_request *req = _usbg_dev->ep0req;
 
 	if (dir) {
 		printk(KERN_DEBUG"IN REQ SENT\n");
-		// Wait for ZLP from host for completion 
-                // of setting of configuration.
-                req->length = EP0_BUFSIZE;
+                req->length = sizeof(int);
+		cmd_send = 44;
+		memcpy(req->buf, &cmd_send, sizeof(int));		
                 ret = usb_ep_queue(_usbg_dev->ep0, req, GFP_ATOMIC);
                 if (ret < 0) {
 			req->status = 0;
@@ -342,8 +343,6 @@ static int hndl_vndr_req(const struct usb_ctrlrequest * ctrlreq)
 	}
 	else {
 		printk(KERN_DEBUG"OUT REQ SENT\n");
-                // Wait for ZLP from host for completion 
-                // of setting of configuration.
 		out_pkt_rcv = 1;
                 req->length = sizeof(int);
                 ret = usb_ep_queue(_usbg_dev->ep0, req, GFP_ATOMIC);
@@ -392,7 +391,7 @@ static int usbg_setup(struct usb_gadget * gadget, const struct usb_ctrlrequest *
 				value = min(w_length, (u16)sizeof(struct usb_device_descriptor));
 				req->length = value;
 				memcpy(req->buf, &device_desc, value);
-			value = usb_ep_queue(_usbg_dev->ep0, req, GFP_ATOMIC);
+				value = usb_ep_queue(_usbg_dev->ep0, req, GFP_ATOMIC);
 				if (value < 0) {
 					req->status = 0;
 					ep0_complete(_usbg_dev->ep0, req);			
